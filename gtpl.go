@@ -1,3 +1,35 @@
+/*****************************************************************/
+/* gtpl.go -- A simplified templating system that makes          */
+/* separation of HTML and application logic easy.                */
+/*                                                               */
+/*---------------------------------------------------------------*/
+/* Copyright (c) 2018 Sam                                        */
+/* Copyright (c) 2022 Matt Rienzo                                */
+/*                                                               */
+/* MIT Licensed:                                                 */
+/* Permission is hereby granted, free of charge, to any person   */
+/* obtaining a copy of this software and associated documentation*/
+/* files (the "Software"), to deal in the Software without       */
+/* restriction, including without limitation the rights to use,  */
+/* copy, modify, merge, publish, distribute, sublicense, and/or  */
+/* sell copies of the Software, and to permit persons to whom the*/
+/* Software is furnished to do so, subject to the following      */
+/* conditions:                                                   */
+/*                                                               */
+/* The above copyright notice and this permission notice shall   */
+/* be included in all copies or substantial portions of the      */
+/* Software.                                                     */
+/*                                                               */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY     */
+/* KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE    */
+/* WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR       */
+/* PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR */
+/* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER   */
+/* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR          */
+/* OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        */
+/*****************************************************************/
+
 package gtpl
 
 import (
@@ -20,14 +52,29 @@ type TPL struct {
 	blocks           map[string]string
 }
 
-// Open a new template file
-func Open(filename string) (TPL, error) {
+// Open(variadic <filePath string | fileStream []bytes>) -- Processes a GTPL file from the file at filePath or contained in []bytes fileStream
+// Input:
+//        filePath   string			-- MANDATORY if fileStream is not provided
+//        fileStream []byte			-- MANDATORY if filePath is not provided
+// Output:
+//        TPL object				-- Contains TPL data about GTPL file
+//        error                     -- Returned if parser fails to parse TPL data or paramaters are wrong
+func Open(vArgs ...interface{}) (TPL, error) {
+	filePath, fileStream, pErrs := openParams(vArgs)
+
+	if pErrs != nil {
+		return TPL{}, pErrs
+	}
+
 	tpl := TPL{}
 
-	fbuffer, err := ioutil.ReadFile(filename)
+	var fErr error
+	if filePath != "" {
+		fileStream, fErr = ioutil.ReadFile(filePath)
+	}
 
-	if err != nil {
-		return tpl, err
+	if fErr != nil {
+		return tpl, fErr
 	}
 
 	// Setup the struct
@@ -35,13 +82,52 @@ func Open(filename string) (TPL, error) {
 	tpl.LocalAssignments = make(map[string]string)
 
 	// Store raw content into output for processing
-	tpl.blocks["[_GTPL_ROOT_]"] = string(fbuffer)
+	tpl.blocks["[_GTPL_ROOT_]"] = string(fileStream)
 
-	if err := tpl.preprocess(""); err != nil {
-		return tpl, errors.New(fmt.Sprintf("gtpl parser failure: %s: %s", filename, err))
+	err := tpl.preprocess("")
+	if err != nil {
+		return tpl, errors.New(fmt.Sprintf("gtpl parser failure: %s", err))
 	}
 
 	return tpl, nil
+}
+
+// openParams(vArgs ...interface{}) -- Validates variadic parameters for Open()
+// Input:
+//        vArgs ...interface{}		-- List of variables
+// Output:
+//        filePath   string			-- untouched
+//     OR fileStream []byte			-- untouched
+//        err         error			-- set if incorrect number of arguments are passed
+func openParams(vArgs ...interface{}) (filePath string, fileStream []byte, err error) {
+	// Verify enough parameters
+	if 1 > len(vArgs) {
+		err = errors.New("not enough parameters")
+	}
+
+	// Validate and unload arguments
+	for i,p := range vArgs {
+		switch i {
+		case 0: // filePath or fileStream
+			pString, check1 := p.(string)
+			pBytes, check2 := p.([]byte)
+			if !check1 && !check2 {
+				err = errors.New("1st parameter not type string or []byte")
+				return
+			}
+			
+			if !check1 {
+				fileStream = pBytes
+			} else if !check2 {
+				filePath = pString
+			}
+		default:
+			err = errors.New("too many parameters")
+			return
+		}
+	}
+
+	return
 }
 
 // Add a new handler

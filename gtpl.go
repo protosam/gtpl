@@ -60,7 +60,7 @@ type TPL struct {
 //        TPL object				-- Contains TPL data about GTPL file
 //        error                     -- Returned if parser fails to parse TPL data or paramaters are wrong
 func Open(vArgs ...interface{}) (TPL, error) {
-	filePath, fileStream, pErrs := openParams(vArgs)
+	filePath, fileStream, pErrs := openParams(vArgs...)
 
 	if pErrs != nil {
 		return TPL{}, pErrs

@@ -100,30 +100,26 @@ func Open(vArgs ...interface{}) (TPL, error) {
 //     OR fileStream []byte			-- untouched
 //        err         error			-- set if incorrect number of arguments are passed
 func openParams(vArgs ...interface{}) (filePath string, fileStream []byte, err error) {
+	filePath, fileStream = "", []byte{}
+	
 	// Verify enough parameters
 	if 1 > len(vArgs) {
 		err = errors.New("not enough parameters")
+	} else if 1 < len(vArgs) {
+		err = errors.New("too many parameters")
 	}
 
 	// Validate and unload arguments
-	for i,p := range vArgs {
-		switch i {
-		case 0: // filePath or fileStream
-			pString, check1 := p.(string)
-			pBytes, check2 := p.([]byte)
-			if !check1 && !check2 {
-				err = errors.New("1st parameter not type string or []byte")
-				return
-			}
-			
-			if !check1 {
-				fileStream = pBytes
-			} else if !check2 {
-				filePath = pString
-			}
-		default:
-			err = errors.New("too many parameters")
+	for _,param := range vArgs {
+		switch x := param.(type) {
+		case []byte:
+			fileStream, _ = param.([]byte)
 			return
+		case string:
+			filePath, _ = param.(string)
+			return
+		default:
+			err = errors.New(fmt.Sprintf("invalid type: %T", x))
 		}
 	}
 

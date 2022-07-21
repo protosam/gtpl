@@ -3,6 +3,7 @@
 /*                                                               */
 /*---------------------------------------------------------------*/
 /* Copyright (c) 2018 Sam                                        */
+/* Copyright (c) 2022 Matt Rienzo                                */
 /*                                                               */
 /* MIT Licensed:                                                 */
 /* Permission is hereby granted, free of charge, to any person   */
@@ -32,7 +33,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/protosam/gtpl"
+	"github.com/casnix/gtpl"
+	"io/ioutil"
 	"log"
 )
 
@@ -47,7 +49,11 @@ func main() {
 	log.Println("Hello TPL!")
 
 	// Use the main.html template or die
-	tpl, err := gtpl.Open("templates/main.html")
+	mainData, bErr := ioutil.ReadFile("templates/main.html")
+	if bErr != nil {
+		log.Panic(bErr)
+	}
+	tpl, err := gtpl.Open(mainData)
 	if err != nil {
 		log.Panic(err)
 	}

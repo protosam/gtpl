@@ -49,6 +49,8 @@ func main() {
 	log.Println("Hello TPL!")
 
 	// Use the main.html template or die
+	// Pass file directly to gtpl.Open() as a byte slice
+	// instead of having gtpl.Open() read the file
 	mainData, bErr := ioutil.ReadFile("templates/main.html")
 	if bErr != nil {
 		log.Panic(bErr)
@@ -84,6 +86,7 @@ func main() {
 
 // Handler to parse out page headers
 func header_handler() string {
+	// Pass filename as string to gtpl.Open()
 	tpl, err := gtpl.Open("templates/overall.html")
 	if err != nil {
 		log.Println(err)

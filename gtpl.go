@@ -110,16 +110,14 @@ func openParams(vArgs ...interface{}) (filePath string, fileStream []byte, err e
 	}
 
 	// Validate and unload arguments
+	var check1 bool
+	var check2 bool
 	for _,param := range vArgs {
-		switch x := param.(type) {
-		case []byte:
-			fileStream, _ = param.([]byte)
+		fileStream, check1 = param.([]byte)
+		filePath, check2 = param.(string)
+		if !check1 && !check2 {
+			err = errors.New(fmt.Sprintf("invalid type: %T", param))
 			return
-		case string:
-			filePath, _ = param.(string)
-			return
-		default:
-			err = errors.New(fmt.Sprintf("invalid type: %T", x))
 		}
 	}
 

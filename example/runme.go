@@ -3,7 +3,6 @@
 /*                                                               */
 /*---------------------------------------------------------------*/
 /* Copyright (c) 2018 Sam                                        */
-/* Copyright (c) 2022 Matt Rienzo                                */
 /*                                                               */
 /* MIT Licensed:                                                 */
 /* Permission is hereby granted, free of charge, to any person   */
@@ -33,7 +32,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/casnix/gtpl"
+	"github.com/protosam/gtpl"
 	"io/ioutil"
 	"log"
 )
